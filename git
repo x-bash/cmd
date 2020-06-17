@@ -1,0 +1,72 @@
+# shellcheck shell=bash
+
+# github
+
+alias github.clone="github.clone.git"
+
+github.clone.git(){
+    local p=${1:?Please provide clone path like username/repo}
+    shift 1
+    git clone "git@github.com:$p.git" "$@"
+}
+
+github.clone.http(){
+    local p=${1:?Please provide clone path like username/repo}
+    shift 1
+    git clone "https://github.com/$p.git" "$@"
+}
+
+github.clone.shallow(){
+    git clone $1 --depth=1
+}
+
+# Help
+
+git.list.top(){
+    git rev-list --objects --all | \
+        grep "$(git verify-pack -v .git/objects/pack/*.idx | sort -k 3 -n | tail -n "${1:-10}" | awk '{print $1}')"
+}
+
+git.rm.file(){
+    git filter-branch --tree-filter "rm -f ${1:-file}" --tag-name-filter cat -- --all
+    git push origin --tags --force
+    git push origin --all --force
+}
+
+git.rm.file.force(){
+    git filter-branch -f --tree-filter "rm -f ${1:-file}" --tag-name-filter cat -- --all
+    git push origin --tags --force
+    git push origin --all --force
+}
+
+# el-logic favor
+
+alias gis="git status"
+alias giss="git status -s"
+alias gib="git branch"
+
+gia(){
+    if [ "$1" == "" ]; then
+        git add .;
+    else
+        git add "$@";
+    fi
+}
+
+giam(){
+    local first_arg="$2"
+    git add "${2:-.}" "${@:3:}"
+    git commit -m "$1"
+}
+
+gip(){
+    git pull origin $(git branch | awk '$1=="*"{ print $2 }' )
+}
+
+giP(){
+    if [ -e "$1" ]; then
+        git push origin $1
+    else
+        git push origin $(git branch | awk '$1=="*"{ print $2 }')
+    fi
+}
